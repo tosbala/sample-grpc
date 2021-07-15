@@ -15,7 +15,7 @@ def run():
     # of the code.
     no_of_reservations = 25
     user_list = ['aviz', 'santi', 'ishbi', 'devz']
-    with grpc.insecure_channel('localhost:8000') as channel:
+    with grpc.insecure_channel('store:8000') as channel:
         stub = bookstore_pb2_grpc.BookStoreStub(channel)
         reservations = []
         # make all the reservations at once

@@ -15,10 +15,10 @@ class BookStore(bookstore_pb2_grpc.BookStoreServicer):
     order_id = 0
     orders = dict()
     def Reserve(self, request, context):
-        print(f"Order from '{request.buyer}' for '{request.quantity}' no of '{request.isbn}' is received")
+        print(f"Order from '{request.buyer}' for '{request.quantity}' no of '{request.isbn}' is received", flush=True)
 
         # make a reservation request to warehouse
-        with grpc.insecure_channel('localhost:8001') as channel:
+        with grpc.insecure_channel('warehouse:8001') as channel:
             stub  = warehouse_pb2_grpc.WarehouseStub(channel)
             reservations = stub.Reservations(warehouse_pb2.WarehouseId(id=request.isbn))
 
@@ -55,12 +55,12 @@ class BookStore(bookstore_pb2_grpc.BookStoreServicer):
         if(self.orders[store_id]['status'] == 'DISPATCHED'):
             return bookstore_pb2.OrderReply(order_id=store_id, status="ALREADY_DISPATCHED")
 
-        with grpc.insecure_channel('localhost:8001') as channel:
+        with grpc.insecure_channel('warehouse:8001') as channel:
             stub  = warehouse_pb2_grpc.WarehouseStub(channel)
             response = stub.Dispatch(warehouse_pb2.WarehouseId(id=self.orders[store_id]['warehouse_id']))
             if response.message == 'CONFIRMED':
                 self.orders[store_id]['status'] = 'DISPATCHED'
-                print(f"Order with id '{store_id}' is completed now")
+                print(f"Order with id '{store_id}' is completed now", flush=True)
                 return bookstore_pb2.OrderReply(order_id=store_id, status="DISPATCHED")
             
             return bookstore_pb2.OrderReply(order_id=store_id, status=response.message)

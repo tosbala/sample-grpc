@@ -19,12 +19,12 @@ class Warehouse(warehouse_pb2_grpc.WarehouseServicer):
 
         self.reservations[warehouse_id] = request
 
-        print(f"Book {request.isbn} for user is reserved with id {warehouse_id}")
+        print(f"Book '{request.isbn}'' for user is reserved with id '{warehouse_id}'", flush=True)
         return warehouse_pb2.WarehouseReply(id=warehouse_id, message="RESERVED")
 
     def Reservations(self, request, context):
         def response_messages():
-            for reservation in self.reservations:
+            for reservation in self.reservations.values():
                 response = common_pb2.Order(isbn=reservation.isbn, buyer=reservation.buyer, quantity=reservation.quantity)
                 yield response
 
@@ -35,7 +35,7 @@ class Warehouse(warehouse_pb2_grpc.WarehouseServicer):
             return warehouse_pb2.WarehouseReply(id=request.id, message="RESERVATION NOT FOUND")
 
         reservation = self.reservations.pop(request.id)
-        print(f"Book {reservation.isbn} reserved with id {request.id} is dispatched now")
+        print(f"Book '{reservation.isbn}' reserved with id '{request.id}' is dispatched now", flush=True)
         return warehouse_pb2.WarehouseReply(id=request.id, message="CONFIRMED")
 
 
