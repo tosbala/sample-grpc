@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.sample.bookstore";
+option java_outer_classname = "BookStoreProto";
+option objc_class_prefix = "BKSTR";
+
+package bookstore;
+
+import "common.proto";
+
+// The bookstore service definition.
+service BookStore {
+  // Reserve
+  rpc Reserve (Order) returns (OrderReply) {}
+  // Purchase
+  rpc Purchase (OrderId) returns (OrderReply) {}
+}
+
+// The response message containing the order details
+message OrderReply {
+  string order_id = 1;
+  string status = 2;
+}
+
+message OrderId {
+  string id = 1;
+}

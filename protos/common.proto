@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message Order {
+    string isbn = 1;
+    string buyer = 2;
+    int32 quantity = 3;
+  }

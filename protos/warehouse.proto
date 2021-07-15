@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.sample.warehouse";
+option java_outer_classname = "WarehouseProto";
+option objc_class_prefix = "WRHS";
+
+package warehouse;
+
+import "common.proto";
+
+// The warehouse service definition.
+service Warehouse {
+  // request to reserve
+  rpc Reserve (Order) returns (WarehouseReply) {}
+  // get all active reservations per user
+  rpc Reservations (WarehouseId) returns (stream Order) {}
+  // request to dispatch the order
+  rpc Dispatch (WarehouseId) returns (WarehouseReply) {}
+}
+
+// The response message containing the warehouse response
+message WarehouseReply {
+  string id = 1;
+  string message = 2;
+}
+
+message WarehouseId {
+  string id = 1;
+}
+
+// message WarehouseReservation {
+//   string data = 1;
+// }
