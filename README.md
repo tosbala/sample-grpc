@@ -6,6 +6,8 @@ demonstrates python and cpp services interacting over grpc.
 Run the following commands that will bring `store`, `warehouse` and `client` up
 
 ```
+git clone https://github.com/tosbala/sample-grpc.git
+cd sample-grpc
 docker-compose build
 docker-compose up
 ```
@@ -16,7 +18,7 @@ We can take out python service and replace it with cpp service and vice versa.
 
 ### Build
 ```
-cd cpp
+cd sample-grpc/cpp
 mkdir -p cmake/build
 pushd cmake/build
 cmake -DCMAKE_PREFIX_PATH=$MY_INSTALL_DIR ../..
