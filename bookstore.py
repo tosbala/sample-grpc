@@ -10,6 +10,8 @@ import bookstore_pb2_grpc
 import warehouse_pb2
 import warehouse_pb2_grpc
 
+WAREHOUSE = 'warehouse'
+
 
 class BookStore(bookstore_pb2_grpc.BookStoreServicer):
     order_id = 0
@@ -17,11 +19,13 @@ class BookStore(bookstore_pb2_grpc.BookStoreServicer):
     def Reserve(self, request, context):
         print(f"Order from '{request.buyer}' for '{request.quantity}' no of '{request.isbn}' is received", flush=True)
 
-        # make a reservation request to warehouse
-        with grpc.insecure_channel('warehouse:8001') as channel:
+        # make a reservation request to warehouse if one doesnt exist already
+        with grpc.insecure_channel(WAREHOUSE + ':8001') as channel:
             stub  = warehouse_pb2_grpc.WarehouseStub(channel)
+            # stream reservations from warehouse
             reservations = stub.Reservations(warehouse_pb2.WarehouseId(id=request.isbn))
 
+            # if reservation found, cancel stream
             already_reserved = False
             try:
                 for reservation in reservations:
@@ -31,6 +35,7 @@ class BookStore(bookstore_pb2_grpc.BookStoreServicer):
             except grpc.RpcError as e:
                 pass
         
+            # make a reservations if one not exists already
             store_id = 'INVALID'
             if not already_reserved:
                 response = stub.Reserve(common_pb2.Order(isbn=request.isbn, buyer=request.buyer, quantity=request.quantity))
@@ -48,6 +53,7 @@ class BookStore(bookstore_pb2_grpc.BookStoreServicer):
             return bookstore_pb2.OrderReply(order_id='INVALID', status="FAILED")
 
     def Purchase(self, request, context):
+        # check if order exists
         store_id = request.id
         if store_id not in self.orders:
             return bookstore_pb2.OrderReply(order_id=store_id, status="NOT_FOUND")
@@ -55,7 +61,8 @@ class BookStore(bookstore_pb2_grpc.BookStoreServicer):
         if(self.orders[store_id]['status'] == 'DISPATCHED'):
             return bookstore_pb2.OrderReply(order_id=store_id, status="ALREADY_DISPATCHED")
 
-        with grpc.insecure_channel('warehouse:8001') as channel:
+        # make a dispatch request to warehouse
+        with grpc.insecure_channel(WAREHOUSE + ':8001') as channel:
             stub  = warehouse_pb2_grpc.WarehouseStub(channel)
             response = stub.Dispatch(warehouse_pb2.WarehouseId(id=self.orders[store_id]['warehouse_id']))
             if response.message == 'CONFIRMED':
