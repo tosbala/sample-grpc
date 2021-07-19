@@ -34,3 +34,6 @@ make -j
 ```
 ./bookstore_client
 ```
+
+## Health Check
+Refer [grpc_health_probe](https://github.com/grpc-ecosystem/grpc-health-probe)
