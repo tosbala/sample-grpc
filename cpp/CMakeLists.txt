@@ -66,13 +66,37 @@ target_link_libraries(bkstr_grpc_proto
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
 
+# warehouse client
+add_library(warehouse_client warehouse_client.cc)
+target_link_libraries(warehouse_client
+  ${_REFLECTION}
+  ${_GRPC_GRPCPP}
+  ${_PROTOBUF_LIBPROTOBUF})
+
+# bookstore server
+add_executable(bookstore_server bookstore_server.cc)
+target_link_libraries(bookstore_server
+  warehouse_client
+  bkstr_grpc_proto
+  ${_REFLECTION}
+  ${_GRPC_GRPCPP}
+  ${_PROTOBUF_LIBPROTOBUF})
+
+# bookstore client
+add_executable(bookstore_client bookstore_client.cc)
+target_link_libraries(bookstore_client
+  bkstr_grpc_proto
+  ${_REFLECTION}
+  ${_GRPC_GRPCPP}
+  ${_PROTOBUF_LIBPROTOBUF})
+
 # Targets greeter_[async_](client|server)
-foreach(_target
-  bookstore_client bookstore_server)
-  add_executable(${_target} "${_target}.cc")
-  target_link_libraries(${_target}
-    bkstr_grpc_proto
-    ${_REFLECTION}
-    ${_GRPC_GRPCPP}
-    ${_PROTOBUF_LIBPROTOBUF})
-endforeach()
+# foreach(_target
+#   bookstore_client bookstore_server)
+#   add_executable(${_target} "${_target}.cc")
+#   target_link_libraries(${_target}
+#     bkstr_grpc_proto
+#     ${_REFLECTION}
+#     ${_GRPC_GRPCPP}
+#     ${_PROTOBUF_LIBPROTOBUF})
+# endforeach()
