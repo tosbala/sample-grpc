@@ -13,7 +13,7 @@ docker-compose up
 ```
 
 ## Build and Run cpp services
-Ensure you have [grpc_cpp](https://grpc.io/docs/languages/cpp/quickstart/) setup in your system.
+Ensure you have [grpc_cpp](https://grpc.io/docs/languages/cpp/quickstart/) setup in your system.  
 We can take out python service and replace it with cpp service and vice versa.
 
 ### Build
@@ -36,4 +36,5 @@ make -j
 ```
 
 ## Health Check
-Refer [grpc_health_probe](https://github.com/grpc-ecosystem/grpc-health-probe)
+Ensure `grpc::EnableDefaultHealthCheckService` is set to true.  
+Then [grpc_health_probe](https://github.com/grpc-ecosystem/grpc-health-probe) shall be used to probe the health of the service
