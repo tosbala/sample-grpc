@@ -36,5 +36,5 @@ make -j
 ```
 
 ## Health Check
-Ensure `grpc::EnableDefaultHealthCheckService` is set to true.  
+Ensure `grpc::EnableDefaultHealthCheckService` is set to `true` to enable tracking the status through [grpc health check protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md).  
 Then [grpc_health_probe](https://github.com/grpc-ecosystem/grpc-health-probe) shall be used to probe the health of the service
