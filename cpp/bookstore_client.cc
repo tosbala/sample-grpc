@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <fstream>
 
 #include <grpcpp/grpcpp.h>
 
@@ -31,6 +32,36 @@ using grpc::Status;
 using bookstore::BookStore;
 using bookstore::OrderId;
 using bookstore::OrderReply;
+
+bool read_file(const std::string& file_name, std::string& data) {
+  std::ifstream ifs(file_name.c_str(), std::ios::in);
+  if(ifs.is_open()) {
+    data.assign((std::istreambuf_iterator<char>(ifs)),
+                 std::istreambuf_iterator<char>());
+  }
+
+  return ifs.good();
+}
+
+// return SSL creds if certs exists else insecure creds.
+std::shared_ptr<grpc::ChannelCredentials> client_credentials() {
+  // read certs and keys
+  std::string client_cert;
+  bool client_cert_exists = read_file("../../../certs/client.crt", client_cert);
+  std::string client_key;
+  bool client_key_exists = read_file("../../../certs/client.key", client_key);
+  std::string root_cert;
+  bool root_cert_exists = read_file("../../../certs/ca.crt", root_cert);
+
+  if (!client_cert_exists || !client_key_exists || !root_cert_exists) {
+    std::cout << "Certs not found, setting up insecure channel" << std::endl;
+    return grpc::InsecureChannelCredentials();
+  }
+
+  std::cout << "setting up secure channel" << std::endl;
+  grpc::SslCredentialsOptions ssl_opt = {root_cert, client_key, client_cert};
+  return grpc::SslCredentials(ssl_opt);
+}
 
 class BookstoreClient {
  public:
@@ -122,8 +153,15 @@ int main(int argc, char** argv) {
     target_str = "localhost:8000";
   }
 
+  // create an insecure channel
+  // BookstoreClient store(
+  //     grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
+
+  // create a secure channel
   BookstoreClient store(
-      grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
+      grpc::CreateChannel(target_str, client_credentials()));
+
+  // make rpc calls
   std::string order_id = store.Reserve("02");
   std::cout << "order id received: " << order_id << std::endl;
   store.Reserve("02");

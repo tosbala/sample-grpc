@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
@@ -38,6 +39,41 @@ using grpc::Status;
 using bookstore::BookStore;
 using bookstore::OrderReply;
 using bookstore::OrderId;
+
+
+bool read_file(const std::string& file_name, std::string& data) {
+  std::ifstream ifs(file_name.c_str(), std::ios_base::binary);
+  if(ifs.is_open()) {
+    data.assign((std::istreambuf_iterator<char>(ifs)),
+                 std::istreambuf_iterator<char>());
+  }
+
+  return ifs.good();
+}
+
+// return SSL creds if certs exists else insecure creds.
+std::shared_ptr<grpc::ServerCredentials> server_credentials() {
+  // read certs and keys
+  std::string server_cert;
+  bool server_cert_exists = read_file("../../../certs/server.crt", server_cert);
+  std::string server_key;
+  bool server_key_exists = read_file("../../../certs/server.key", server_key);
+  std::string root_cert;
+  bool root_cert_exists = read_file("../../../certs/ca.crt", root_cert);
+
+  if (!server_cert_exists || !server_key_exists || !root_cert_exists) { 
+    std::cout << "Certs not found, setting up insecure creds" << std::endl;
+    return grpc::InsecureServerCredentials();
+  }
+
+  std::cout << "setting up SSL creds" << std::endl;
+  grpc::SslServerCredentialsOptions::PemKeyCertPair key_cert_pair = {server_key, server_cert};
+  grpc::SslServerCredentialsOptions ssl_opts(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
+  ssl_opts.pem_root_certs = root_cert;
+  ssl_opts.pem_key_cert_pairs.push_back(key_cert_pair);
+
+  return grpc::SslServerCredentials(ssl_opts);
+}
 
 
 // Logic and data behind the server's behavior.
@@ -111,16 +147,20 @@ long BookStoreServiceImpl::order_count = 0;
 std::map<std::string, std::pair<std::string, std::string>> BookStoreServiceImpl::orders;
 
 void RunServer() {
-  std::string server_address("0.0.0.0:8000");
-  BookStoreServiceImpl service;
-
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
   ServerBuilder builder;
+  
   // Listen on the given address without any authentication mechanism.
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+  // builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+
+  // Listen securely on the given address.
+  std::string server_address("0.0.0.0:8000");
+  builder.AddListeningPort(server_address, server_credentials());
+  
   // Register "service" as the instance through which we'll communicate with
   // clients. In this case it corresponds to an *synchronous* service.
+  BookStoreServiceImpl service;
   builder.RegisterService(&service);
 
   // Lets set up an inceptor
